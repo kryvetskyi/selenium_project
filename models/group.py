@@ -3,6 +3,6 @@ from dataclasses import dataclass
 
 @dataclass
 class Group:
-    name: str
-    header: str
-    footer: str
+    name: str = None
+    header: str = None
+    footer: str = None
