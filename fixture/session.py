@@ -7,12 +7,10 @@ class SessionHelper:
         self.app = app
 
     def login(self, username, password):
-        driver = self.app.driver
         self.app.open_home_page()
-        driver.find_element(By.NAME, "user").send_keys(username)
-        driver.find_element(By.NAME, "pass").send_keys(password)
-        driver.find_element(By.CSS_SELECTOR, "input:nth-child(7)").click()
+        self.app.driver.find_element(By.NAME, "user").send_keys(username)
+        self.app.driver.find_element(By.NAME, "pass").send_keys(password)
+        self.app.driver.find_element(By.CSS_SELECTOR, "input:nth-child(7)").click()
 
     def logout(self):
-        driver = self.app.driver
-        driver.find_element(By.LINK_TEXT, "Logout").click()
+        self.app.driver.find_element(By.LINK_TEXT, "Logout").click()
