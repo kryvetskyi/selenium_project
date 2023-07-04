@@ -1,13 +1,18 @@
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import NoSuchElementException
+
+from models.group import Group
 
 
 class GroupHelper:
+    group_cache = None
+
     def __init__(self, app):
         self.app = app
 
     def open_groups_page(self):
-        self.app.driver.find_element(By.LINK_TEXT, "groups").click()
+        if not (self.app.driver.current_url.endswith("/group.php") and
+                len(self.app.driver.find_elements(By.NAME, "new")) > 0):
+            self.app.driver.find_element(By.LINK_TEXT, "groups").click()
 
     def create(self, group):
         self.open_groups_page()
@@ -20,9 +25,9 @@ class GroupHelper:
         # submit group creation
         self.app.driver.find_element(By.NAME, "submit").click()
         self.return_to_groups_page()
+        self.group_cache = None
 
     def change_field_value(self, field_name, field_value):
-        driver = self.app.driver
         if field_value is not None:
             self.app.driver.find_element(By.NAME, field_name).click()
             self.app.driver.find_element(By.NAME, field_name).clear()
@@ -46,6 +51,7 @@ class GroupHelper:
         # submit
         self.app.driver.find_element(By.NAME, "update").click()
         self.return_to_groups_page()
+        self.group_cache = None
 
     def delete_first_group(self):
         self.open_groups_page()
@@ -55,6 +61,7 @@ class GroupHelper:
         self.app.driver.find_element(By.NAME, "delete").click()
 
         self.return_to_groups_page()
+        self.group_cache = None
 
     def select_first_group(self):
         self.app.driver.find_element(By.NAME, "selected[]").click()
@@ -62,16 +69,18 @@ class GroupHelper:
     def return_to_groups_page(self):
         self.app.driver.find_element(By.LINK_TEXT, "group page").click()
 
-    def delete_group_by_index(self, index):
+    def count(self):
         self.open_groups_page()
+        return len(self.app.driver.find_elements(By.NAME, "selected[]"))
 
-        # select group by index and  click delete
-        try:
-            self.app.driver.find_element(By.XPATH, f"//span[@class='group'][{index}]/input[@type='checkbox']").click()
-        except NoSuchElementException:
-            error_message = f"Can't find group by index {index}"
-            raise AssertionError(error_message)
+    def get_all_groups(self):
+        if self.group_cache is None:
+            self.group_cache = []
+            self.open_groups_page()
+            all_groups_elements = self.app.driver.find_elements(By.XPATH, "//span[@class='group']")
+            for el in all_groups_elements:
+                text = el.text
+                group_id = el.find_element(By.NAME, "selected[]").get_attribute("value")
+                self.group_cache.append(Group(name=text, id=group_id))
 
-        self.app.driver.find_element(By.NAME, "delete").click()
-
-        self.return_to_groups_page()
+        return list(self.group_cache)
