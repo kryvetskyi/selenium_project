@@ -1,13 +1,21 @@
 import pytest
+import random
+import string
 
 from models.group import Group
 
 
-@pytest.mark.parametrize("group",
-                         [(Group('test name', 'test header', 'test footer')),
-                          (Group("", "", "")),
-                          (Group("1", "2", "3")),
-                          ])
+def random_string(prefix, max_len):
+    text = string.ascii_letters + string.digits + " " * 10 + string.punctuation
+    return prefix + ''.join(random.choice(text) for _ in range(random.randrange(max_len)))
+
+
+test_data = [Group(name="", header="", footer="")] + [
+    Group(name=random_string('name', 10), header=random_string('header', 10), footer=random_string('footer', 10))
+    for i in range(5)]
+
+
+@pytest.mark.parametrize("group", test_data, ids=[repr(x) for x in test_data])
 def test_create_group_parametrized(app, group):
     groups_before = app.group.get_all_groups()
     app.group.create(group)
