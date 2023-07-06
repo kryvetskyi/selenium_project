@@ -7,7 +7,7 @@ from fixture.session import SessionHelper
 
 
 class Application:
-    def __init__(self, base_url, browser):
+    def __init__(self, browser, base_url):
         if browser == "firefox":
             self.driver = webdriver.Firefox()
         elif browser == "chrome":

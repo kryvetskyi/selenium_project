@@ -1,19 +1,29 @@
+import json
+from pathlib import Path
+
 import pytest
 
 from fixture.application import Application
 
 fixture = None
+target = None
 
 
 @pytest.fixture
 def app(request):
     global fixture
-    if fixture is None or (not fixture.is_valid()):
+    global target
+    if fixture is None or not fixture.is_valid():
         browser = request.config.getoption("--browser")
-        base_url = request.config.getoption("--base_url")
-        fixture = Application(base_url, browser)
+        if target is None:
+            conf_file = Path(__file__).resolve().parent.parent / "target.json"
 
-    fixture.session.ensure_login(username="admin", password="secret")
+            with open(conf_file) as f:
+                target = json.load(f)
+
+        fixture = Application(browser, target["base_url"])
+
+    fixture.session.ensure_login(username=target["username"], password=target["password"])
 
     yield fixture
 
@@ -21,8 +31,11 @@ def app(request):
 @pytest.fixture(scope="session", autouse=True)
 def logout_and_destroy(request):
     browser = request.config.getoption("--browser")
-    base_url = request.config.getoption("--base_url")
-    fixture = Application(base_url, browser)
+    conf_file = Path(__file__).resolve().parent.parent / "target.json"
+    with open(conf_file) as f:
+        target = json.load(f)
+
+    fixture = Application(browser, target["base_url"])
 
     def finalizer():
         fixture.session.ensure_logout()
@@ -34,4 +47,4 @@ def logout_and_destroy(request):
 
 def pytest_addoption(parser):
     parser.addoption("--browser", action="store", default="chrome", help="Specify browser")
-    parser.addoption("--base_url", action="store", default="http://localhost:8888/addressbook/", help="Specify url")
+    parser.addoption("--target", action="store", default="target.json", help="Specify url")
